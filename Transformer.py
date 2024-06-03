@@ -82,6 +82,7 @@ class MultiHeadAttention(nn.Module):
         )  # re-assemble all head outputs side by side
         # output projection
         y = self.resid_dropout(self.c_proj(y))
+
         return y
 
 
@@ -322,6 +323,7 @@ class EncoderDecoderAttention(nn.Module):
 
         # output projection
         y = self.resid_dropout(self.c_proj(y))
+
         return y
 
 
@@ -424,4 +426,5 @@ class Transformer(nn.Module):
 
         # Take the output from the encoder and translated text and pass to the decoder
         y = self.decoder(encoder_out, y)
+
         return y
