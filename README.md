@@ -27,4 +27,6 @@ $ python3 -m  venv pytorch_env && source pytorch_env/bin/activate
 (pytorch_env) $ python train.py
 ```
 6. generate translations from a trained model specified by model_name and an input sentence. If there is no input sentence the model will generate translations from the test dataset.
+```
 (pytorch_env) $ python translate.py model_name "das wetter ist gut"
+```
