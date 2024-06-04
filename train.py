@@ -25,15 +25,13 @@ test_dataset = torch.load("test_dataset.pt")
 train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=True)
 
-losses = []
-
 torch.set_grad_enabled(True)
 
 optimizer = optim.Adam(model.parameters())
 
 
 def save_checkpoint(model, optimizer, save_path, epoch):
-    """ function to save checkpoints on the model weights, the optimiser state and epoch"""
+    """function to save checkpoints on the model weights, the optimiser state and epoch"""
     torch.save(
         {
             "model_state_dict": model.state_dict(),
@@ -54,16 +52,8 @@ elif sys.argv[1] is not None:
     epoch_start = state["epoch"]
 
 
-# Save the model and optimizer
-
-epoch = 0
-path_to_save = "model_post" + str(epoch)
-save_checkpoint(model, optimizer, path_to_save, epoch)
-
-
-num_epochs = 30
-
-for epoch in range(epoch_start + 1, epoch_start + 1 + num_epochs):
+# The training loop (The + 1 is get the numbers we want from range)
+for epoch in range(epoch_start + 1, config.epochs + 1):
     model.train()
     for i, (german, english, output) in enumerate(train_dataloader):
 
@@ -89,12 +79,13 @@ for epoch in range(epoch_start + 1, epoch_start + 1 + num_epochs):
         # update the weights
         optimizer.step()
 
-        losses.append(loss)
+        # print how the training is doing at regular stages during the epoch
         if i % 400 == 0:
             print(f"Epoch: {epoch}, Iteration: {i}, Loss: {loss.item()}")
         writer.flush()
 
     # Save the model and optimizer
+    path_to_save = "model_post_" + str(epoch)
     save_checkpoint(model, optimizer, path_to_save, epoch)
 
     # Compute average loss on the test set

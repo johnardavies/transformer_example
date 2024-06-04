@@ -8,6 +8,7 @@ import pickle
 
 from config import *
 
+
 # Strip punctuation
 def strip_punctuation(s):
     """Function that removes punctuation"""
@@ -36,7 +37,7 @@ def main():
             english = "[start] " + strip_punctuation(english.lower()) + " [end]"
             text_pairs.append([strip_punctuation(german.lower()), english])
         except:
-            print("failed to load %s" % (i))
+            print("failed to load line %s" % (i))
 
     # To get the tokens used in English and German text we create
     # two separate lists and from these create a single german
@@ -47,7 +48,7 @@ def main():
     german_text = " ".join(german_list)
     english_text = " ".join(english_list)
 
-    class EncodeDecode:
+    class Words_numbers:
         """Class that produces two dictionaries from input text, one of which maps words
         to numbers and the other one reverses this mapping numbers to words."""
 
@@ -63,44 +64,44 @@ def main():
             )
             self.tokens_vocab = [item for item, count in self.tokens_counter]
 
-        def decode(self):
-            # Create a decoder from the numbers to the tokens
-            decoder = {i + 1: token for i, token in enumerate(self.tokens_vocab)}
-            return decoder
+        def to_words(self):
+            # Converts from the numbers to words
+            word_dict = {i + 1: token for i, token in enumerate(self.tokens_vocab)}
+            return word_dict
 
-        def encode(self):
-            # Create an encoder of the tokens to numbers
-            encoder = {token: i + 1 for i, token in enumerate(self.tokens_vocab)}
-            return encoder
+        def to_numbers(self):
+            # Comverts from words to numbers
+            number_dict = {token: i + 1 for i, token in enumerate(self.tokens_vocab)}
+            return number_dict
 
         # Get the German tokens and the English tokens
 
-    english_tokens = EncodeDecode(english_text, config.vocab_size-1)
-    german_tokens = EncodeDecode(german_text, config.vocab_size-1)
+    english_tokens = Words_numbers(english_text, config.vocab_size - 1)
+    german_tokens = Words_numbers(german_text, config.vocab_size - 1)
 
     # Creates encoding dictionaries
 
-    english_encoded = english_tokens.encode()
-    german_encoded = german_tokens.encode()
+    english_numeric = english_tokens.to_numbers()
+    german_numeric = german_tokens.to_numbers()
 
     # Save the english and german dictionaries
     with open("english_dictionary.pkl", "wb") as eng:
-        pickle.dump(english_tokens.encode(), eng)
+        pickle.dump(english_numeric, eng)
 
     with open("german_dictionary.pkl", "wb") as ger:
-        pickle.dump(german_tokens.encode(), ger)
+        pickle.dump(german_numeric, ger)
 
     # Encode the tokens if they are in the 15000 most common tokens
 
     text_pairs_encoded = [
         [
             [
-                german_encoded[element]
+                german_numeric[element]
                 for element in pair[0].split()
                 if element in german_tokens.tokens_vocab
             ],
             [
-                english_encoded[element]
+                english_numeric[element]
                 for element in pair[1].split()
                 if element in english_tokens.tokens_vocab
             ],
