@@ -6,7 +6,7 @@ The code is talked through in more detail in this post [here](https://johnardavi
 
 To run the example:
 
-1. clone the repo, download the english-german translation pairs from [anki](https://www.manythings.org/anki/) and unzip the file:
+1. clone the repo, cd into the directory and download the english-german translation pairs from [anki](https://www.manythings.org/anki/) and unzip the file:
 ```
 $ wget https://www.manythings.org/anki/deu-eng.zip && unzip deu-eng.zip
 ```
@@ -16,7 +16,7 @@ $ python3 -m  venv pytorch_env && source pytorch_env/bin/activate
 ```
 3. install the requirements
 ```
-(pytorch_env) $ pip -r install requirements.txt
+(pytorch_env) $ pip install -r requirements.txt
 ```
 4. process the text data to generate a text and training dataset
 ```
