@@ -22,9 +22,9 @@ $ python3 -m  venv pytorch_env && source pytorch_env/bin/activate
 ```
 (pytorch_env) $ python text_processing.py
 ```
-5. train the model 
+5. train the model. The "new_model" flag indicates that tha training starts from scratch.
 ```
-(pytorch_env) $ python train.py
+(pytorch_env) $ python train.py "new_model"
 ```
 6. generate translations from a trained model specified by model_name and an input sentence. If there is no input sentence the model will generate translations from the test dataset.
 ```
