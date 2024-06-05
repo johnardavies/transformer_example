@@ -22,7 +22,7 @@ $ python3 -m  venv pytorch_env && source pytorch_env/bin/activate
 ```
 (pytorch_env) $ python text_processing.py
 ```
-5. train the model. The "new_model" flag indicates that tha training starts from scratch.
+5. train the model. The "new_model" flag indicates that tha training starts from scratch. Training the model for 30 epochs on a Mac Air M2 with 24 GB RAM doing other things took about 7.5 days. 
 ```
 (pytorch_env) $ python train.py "new_model"
 ```
