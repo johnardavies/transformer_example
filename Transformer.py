@@ -122,7 +122,7 @@ class LayerNorm(nn.Module):
         return Fun.layer_norm(input, self.weight.shape, self.weight, self.bias, 1e-5)
 
 
-class Processing_layer(nn.Module):
+class ProcessingLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.denselayer1 = nn.Linear(config.dim_embedding, config.dim_inner_layer)
@@ -342,7 +342,7 @@ class Encoder(nn.Module):
         self.attention_encoder = MultiHeadAttention(config)
 
         # Set up a processing layer
-        self.encoder_processing_layer = Processing_layer(config)
+        self.encoder_processing_layer = ProcessingLayer(config)
 
     def forward(self, x):
         # Encode the language we want to translate from
@@ -378,7 +378,7 @@ class Decoder(nn.Module):
         self.decoder_attn = EncoderDecoderAttention(config)
 
         # Set up a processing layer for the decoder
-        self.decoder_processing_layer = Processing_layer(config)
+        self.decoder_processing_layer = ProcessingLayer(config)
 
         # The final layer which maps the models embedding dimension back to the vocab size
         self.final_layer = nn.Linear(config.dim_embedding, config.vocab_size)
