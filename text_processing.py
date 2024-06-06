@@ -48,7 +48,7 @@ def main():
     german_text = " ".join(german_list)
     english_text = " ".join(english_list)
 
-    class Words_numbers:
+    class WordsNumbers:
         """Class that produces two dictionaries from input text, one of which maps words
         to numbers and the other one reverses this mapping numbers to words."""
 
@@ -76,8 +76,8 @@ def main():
 
         # Get the German tokens and the English tokens
 
-    english_tokens = Words_numbers(english_text, config.vocab_size - 1)
-    german_tokens = Words_numbers(german_text, config.vocab_size - 1)
+    english_tokens = WordsNumbers(english_text, config.vocab_size - 1)
+    german_tokens = WordsNumbers(german_text, config.vocab_size - 1)
 
     # Creates encoding dictionaries
 
