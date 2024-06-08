@@ -6,14 +6,12 @@ from collections import Counter
 from string import punctuation
 import pickle
 
-from config import *
-
+from config import TransformerConfig
 
 # Strip punctuation
 def strip_punctuation(s):
     """Function that removes punctuation"""
     return str("".join(c for c in s if c not in punctuation))
-
 
 def tensor_pad(x):
     """converts list to tensor and pads to length 20"""
@@ -23,8 +21,11 @@ def tensor_pad(x):
 # Split the text file into german and english
 # We start each line of the English text with start
 
+# Initialize configuration
+config = TransformerConfig()
 
 def main():
+    """This is the function which processes the text to output it in a form used by the model"""
     text_file = "deu.txt"
     with open(text_file) as language_file:
         lines = language_file.read().split("\n")
@@ -39,9 +40,9 @@ def main():
         except:
             print("failed to load line %s" % (i))
 
-    # To get the tokens used in English and German text we create
-    # two separate lists and from these create a single german
-    # text and a single english text
+    # To get the tokens used in English and German texts we create
+    # two separate lists and from these create a single German
+    # text and a single English text
     german_list = [item[0] for item in text_pairs]
     english_list = [item[1] for item in text_pairs]
 
@@ -51,16 +52,16 @@ def main():
     class WordsNumbers:
         """Class that produces two dictionaries from input text, one of which maps words
         to numbers and the other one reverses this mapping numbers to words."""
-
-        def __init__(self, text, vocab):
+        def __init__(self, text, config):
             self.text = text
+            self.config=config
             # Get the tokens
             self.tokens_list = list(set(self.text.split()))
-            self.vocab_size = vocab
+            
             # Get the most common tokens
-
+            # Subtract -1 as we want to use 1 of the dimensions to cover the padding tokens rather than words
             self.tokens_counter = Counter(self.text.split()).most_common(
-                self.vocab_size
+                self.config.vocab_size-1
             )
             self.tokens_vocab = [item for item, count in self.tokens_counter]
 
@@ -74,24 +75,24 @@ def main():
             number_dict = {token: i + 1 for i, token in enumerate(self.tokens_vocab)}
             return number_dict
 
-        # Get the German tokens and the English tokens
+    # Get the German tokens and the English tokens
 
-    english_tokens = WordsNumbers(english_text, config.vocab_size - 1)
-    german_tokens = WordsNumbers(german_text, config.vocab_size - 1)
+    english_tokens = WordsNumbers(english_text, config)
+    german_tokens = WordsNumbers(german_text, config)
 
-    # Creates encoding dictionaries
+    # Creates dictionaries converting words into numbers
 
     english_numeric = english_tokens.to_numbers()
     german_numeric = german_tokens.to_numbers()
 
-    # Save the english and german dictionaries
+    # Save the English and German dictionaries
     with open("english_dictionary.pkl", "wb") as eng:
         pickle.dump(english_numeric, eng)
 
     with open("german_dictionary.pkl", "wb") as ger:
         pickle.dump(german_numeric, ger)
 
-    # Encode the tokens if they are in the 15000 most common tokens
+    # Encode the words into numbers if they are in the 15000 most common ones
 
     text_pairs_encoded = [
         [
@@ -131,7 +132,7 @@ def main():
     # Calculate how many observations are needed for a 20% test sample
     test_len = round(len(text_pairs_encoded_padded) * 0.2)
 
-    # Calculate the number of training observations as residual
+    # Calculate the number of training observations as the residual
     train_len = round(len(text_pairs_encoded_padded)) - test_len
 
     # Get the train dataset and the test dataset
