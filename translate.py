@@ -75,23 +75,27 @@ def prediction(x, y):
 
 
 def decode_sequence(input_sentence):
-    """This function generates a translation recursively"""
-    # Unsqueezing adds an extra dimension so that the tensor is of size torch.Size([1, 20])
-    tokenized_input_sentence = text_pro.tensor_pad(
-        source_vectorization(input_sentence)
-    )[: config.block_size].unsqueeze(0)
+    """This function generates the translation"""
+    
+    # Unsqueezing adds an extra dimension so that the model which was trained on batches can read single sentences
+    tokenized_input_sentence = text_pro.tensor_pad(source_vectorization(input_sentence))[
+        : config.block_size
+    ].unsqueeze(0)
+
     #  initalises the decoded sentence with [start]
     decoded_sentence = "[start]"
+
     # Loop through the sentence word by word
     for i in range(0, config.block_size):
-        tokenized_target_sentence = text_pro.tensor_pad(
-            target_vectorization(decoded_sentence)
-        )[: config.block_size].unsqueeze(0)
+        tokenized_target_sentence = text_pro.tensor_pad(target_vectorization(decoded_sentence))[
+            : config.block_size
+        ].unsqueeze(0)
 
         # Generate predictions
         predictions = prediction(tokenized_input_sentence, tokenized_target_sentence)
 
-        # The second index in the positions tensor is the word position, the third index are the words
+        # The first index in the predictions tensor is the word position in the sentence
+        # the second index is the predicted word
         # The .item() extracts the tensor index from the tensor
         sampled_token_index = torch.multinomial(predictions[i, :], num_samples=1).item()
 
@@ -105,6 +109,7 @@ def decode_sequence(input_sentence):
         if sampled_token == "[end]":
             break
     return decoded_sentence
+
 
 
 def trans(x, lan):
