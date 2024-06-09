@@ -106,16 +106,16 @@ class MultiHeadAttention(nn.Module):
             )
 
     def forward(self, x):
-        # Split the input tensor dimension down into the batch size B , the sequence length T and the emnedding dimensionality G
+        # Get the values of the batch size, sequence length and embedding dimensionality 
         (
             B,
             T,
             C,
         ) = (
             x.size()
-        )  # batch size, sequence length, embedding dimensionality (dim_embedding)
+        )  
         # calculate query, key, values
-        # by splitting the output of the attention layer into tensors of dimensio dim_embedding on the 2nd dimension
+        # by splitting the output of the attention layer into tensors of dimension dim_embedding on the 2nd dimension
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
         # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -143,19 +143,22 @@ class MultiHeadAttention(nn.Module):
             # manual implementation of attention
             # Calculate the inner product of the q and k vectors and normalise by square root of length of key vectors
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            # Calculate the masked attention
-            #   att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
+       
             # Apply the softmax layer so that everything sums to 1
             att = F.softmax(att, dim=-1)
+
+            # Apply dropout
             att = self.attn_dropout(att)
+
             # Multiply the attention results by the value vectors
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-            # Change the shape of the tensor back to B, T, C removing the heads
+
+        # Change the shape of the tensor back to B, T, C removing the heads
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
       
-        # output projection
+        # output projection and droput
         y = self.resid_dropout(self.c_proj(y))
        
         return y
@@ -201,17 +204,19 @@ class CausalSelfAttentionMasked(nn.Module):
             )
 
     def forward(self, x):
-        # Split the input tensor dimension down into the batch size B , the sequence length T and the emnbedding dimensionality C
+        # Get the values of the batch size, sequence length and embedding dimensionality 
         (
             B,
             T,
             C,
         ) = (
             x.size()
-        )  # batch size, sequence length, embedding dimensionality (dim_embedding)
-        # calculate query, key, values
-        # by splitting the output of the attention layer into tensors of dimensio dim_embedding on the 2nd dimension
+        )  
+
+        # calculate query, key and value vectors
+        # by splitting the output of the attention layer into tensors of dimension dim_embedding on the 2nd dimension
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
+
         # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
@@ -222,6 +227,7 @@ class CausalSelfAttentionMasked(nn.Module):
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
+
         if self.flash:
             # efficient attention using Flash Attention CUDA kernels
             y = torch.nn.functional.scaled_dot_product_attention(
@@ -232,25 +238,30 @@ class CausalSelfAttentionMasked(nn.Module):
                 dropout_p=self.dropout if self.training else 0,
                 is_causal=True,
             )
-        #    print(y.size())
+       
         else:
             # manual implementation of attention
             # Calculate the inner product of the q and k vectors and normalise by square root of length of key vectors
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+
             # Calculate the masked attention
             att = att.masked_fill(attn_mask == 0, float("-inf"))
+
             # Apply the softmax layer so that everything sums to 1
             att = F.softmax(att, dim=-1)
+            
+            # Apply dropout
             att = self.attn_dropout(att)
+
             # Multiply the attention results by the value vectors
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-            # Change the shape of the tensor back to B, T, C removing the heads
-
+            
+        # Change the shape of the tensor back to B, T, C removing the heads
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
 
-        # output projection
+        # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
 
         return y
@@ -308,25 +319,25 @@ class EncoderDecoderAttention(nn.Module):
         ) = (
             e.size()
         )  # batch size, sequence length, embedding dimensionality (dim_embedding)
-        # calculate query, key, values
-        # by splitting the output of the attention layer into tensors of dimensio dim_embedding on the 2nd dimension
+
+        # calculate the key and value vectors from the output of the encoder
         _, k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-        #   print(q.size(), k.size())
+       
 
-        # Generating the value vector from  the decoder input
+        # Get the values of the batch size, sequence length and embedding dimensionality (dim_embedding)
         (
             B,
             T,
             C,
         ) = (
             x.size()
-        )  # batch size, sequence length, embedding dimensionality (dim_embedding)
+        )  
 
-        # calculate values for all heads in batch and move head forward to be the batch dim
+        # calculate the query vectors from the output of the previous decoder layers
         q, _, _ = self.c_attn(x).split(self.dim_embedding, dim=2)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
@@ -359,6 +370,7 @@ class EncoderDecoderAttention(nn.Module):
 
         return y
 
+# The Encoder class
 
 class Encoder(nn.Module):
     def __init__(self, config):
@@ -386,6 +398,7 @@ class Encoder(nn.Module):
 
         return x
 
+# The Decoder class
 
 class Decoder(nn.Module):
     def __init__(self, config):
@@ -430,6 +443,7 @@ class Decoder(nn.Module):
 
         return y
 
+# The Transformer class
 
 class Transformer(nn.Module):
     def __init__(self, config):
