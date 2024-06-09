@@ -85,7 +85,7 @@ class MultiHeadAttention(nn.Module):
             config.dim_embedding, config.dim_embedding, bias=config.bias
         )
 
-        # regularization
+        # regularisation
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
         self.dropout = config.dropout
@@ -157,7 +157,7 @@ class MultiHeadAttention(nn.Module):
         return y
 
 
-class MaskedMultiHeadAttentionMasked(nn.Module):
+class MaskedMultiHeadAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
         
@@ -176,7 +176,7 @@ class MaskedMultiHeadAttentionMasked(nn.Module):
             config.dim_embedding, config.dim_embedding, bias=config.bias
         )
 
-        # regularization
+        # regularisation
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
         self.dropout = config.dropout
@@ -392,7 +392,7 @@ class Decoder(nn.Module):
         self.decoder_embed = Embedding(config)
 
         # Create an attention mechanism for the decoder
-        self.attention_decoder = CausalSelfAttentionMasked(config)
+        self.attention_decoder = MaskedMultiHeadAttention(config)
 
         # Create a layernorm layer
         self.layernorm = LayerNorm(config.dim_embedding, bias=config.bias)
