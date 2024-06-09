@@ -99,7 +99,7 @@ class MultiHeadAttention(nn.Module):
             )
 
     def forward(self, x):
-        # Get the values of the batch size, sequence length and embedding dimensionality 
+        # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
@@ -197,7 +197,7 @@ class MaskedMultiHeadAttentionMasked(nn.Module):
             )
 
     def forward(self, x):
-        # Get the values of the batch size, sequence length and embedding dimensionality 
+        # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
@@ -304,14 +304,14 @@ class EncoderDecoderAttention(nn.Module):
 
     def forward(self, x, e):
 
-        # Generating the query and key vectors from the vectors from the encoder
+       # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
             C,
         ) = (
             e.size()
-        )  # batch size, sequence length, embedding dimensionality (dim_embedding)
+        )  
 
         # calculate the key and value vectors from the output of the encoder
         _, k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
@@ -320,16 +320,6 @@ class EncoderDecoderAttention(nn.Module):
         )  # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
        
-
-        # Get the values of the batch size, sequence length and embedding dimensionality (dim_embedding)
-        (
-            B,
-            T,
-            C,
-        ) = (
-            x.size()
-        )  
-
         # calculate the query vectors from the output of the previous decoder layers
         q, _, _ = self.c_attn(x).split(self.dim_embedding, dim=2)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -358,7 +348,7 @@ class EncoderDecoderAttention(nn.Module):
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
 
-        # output projection
+        # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
 
         return y
