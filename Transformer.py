@@ -22,6 +22,7 @@ class LayerNorm(nn.Module):
 class Embedding(nn.Module):
     def __init__(self, config):
         super().__init__()
+        
         # Creates the text embedding and the position embedding
         # nn.Embedding automatically does the one hot encoding so this
         # does not need to be created directly
@@ -63,7 +64,7 @@ class Processing_layer(nn.Module):
 class MultiHeadAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-        # Checks that the dimesion of the embedding vector can be divided by the number of heads
+        # Checks that the dimension of the embedding vector can be divided by the number of heads
         assert config.dim_embedding % config.n_head == 0
 
         # set embedding and head sizes
@@ -75,7 +76,7 @@ class MultiHeadAttention(nn.Module):
         # the output dimension is the second argument
         # the last argument is the b (bias) term
 
-        # Sets up a layer that increases the value of the embedding 3x to calculate the query, key and value vectors
+        # Sets up a layer that increases the dimensionality of the embedding 3x to calculate the query, key and value vectors
         self.c_attn = nn.Linear(
             config.dim_embedding, 3 * config.dim_embedding, bias=config.bias
         )
@@ -153,17 +154,18 @@ class MultiHeadAttention(nn.Module):
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
-        #   print(y.size(), 'proj')
+      
         # output projection
         y = self.resid_dropout(self.c_proj(y))
-        # print(y.size())
+       
         return y
 
 
 class CausalSelfAttentionMasked(nn.Module):
     def __init__(self, config):
         super().__init__()
-        # Checks that the dimesion of the embedding vector can be divided by the number of heads
+        
+        # Checks that the dimension of the embedding vector can be divided by the number of heads
         assert config.dim_embedding % config.n_head == 0
         
         # set embedding and head size
@@ -257,9 +259,10 @@ class CausalSelfAttentionMasked(nn.Module):
 class EncoderDecoderAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
+        # Checks that the dimension of the embedding vector can be divided by the number of heads
         assert config.dim_embedding % config.n_head == 0
 
-       # set embedding and head sizes
+        # set embedding and head sizes
         self.n_head = config.n_head
         self.dim_embedding = config.dim_embedding
  
