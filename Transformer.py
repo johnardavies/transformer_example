@@ -238,7 +238,7 @@ class MaskedMultiHeadAttention(nn.Module):
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
 
             # Calculate the masked attention
-            att = att.masked_fill(attn_mask == 0, float("-inf"))
+            att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
 
             # Apply the softmax layer so that everything sums to 1
             att = F.softmax(att, dim=-1)
@@ -294,14 +294,7 @@ class EncoderDecoderAttention(nn.Module):
             print(
                 "WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0"
             )
-            # causal mask to ensure that attention is only applied to the left in the input sequence
-            self.register_buffer(
-                "bias",
-                torch.tril(torch.ones(config.block_size, config.block_size)).view(
-                    1, 1, config.block_size, config.block_size
-                ),
-            )
-
+     
     def forward(self, x, e):
 
        # Get the values of the batch size, block size and embedding dimensionality 
@@ -340,7 +333,6 @@ class EncoderDecoderAttention(nn.Module):
         else:
             # manual implementation of attention
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = att.masked_fill(attn_mask == 0, float("-inf"))
             att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
