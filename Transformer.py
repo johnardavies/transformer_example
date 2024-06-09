@@ -97,13 +97,6 @@ class MultiHeadAttention(nn.Module):
             print(
                 "WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0"
             )
-            # causal mask to ensure that attention is only applied to the left in the input sequence
-            self.register_buffer(
-                "bias",
-                torch.tril(torch.ones(config.block_size, config.block_size)).view(
-                    1, 1, config.block_size, config.block_size
-                ),
-            )
 
     def forward(self, x):
         # Get the values of the batch size, sequence length and embedding dimensionality 
@@ -164,7 +157,7 @@ class MultiHeadAttention(nn.Module):
         return y
 
 
-class CausalSelfAttentionMasked(nn.Module):
+class MaskedMultiHeadAttentionMasked(nn.Module):
     def __init__(self, config):
         super().__init__()
         
