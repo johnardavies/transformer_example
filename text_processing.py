@@ -8,21 +8,19 @@ import pickle
 
 from config import TransformerConfig
 
+# Initialize configuration
+config = TransformerConfig()
+
 # Strip punctuation
 def strip_punctuation(s):
     """Function that removes punctuation"""
     return str("".join(c for c in s if c not in punctuation))
 
+
 def tensor_pad(x):
     """converts list to tensor and pads to length 20"""
     return Fun.pad(torch.tensor(x, dtype=torch.int64), (0, config.block_size), value=0)
 
-
-# Split the text file into german and english
-# We start each line of the English text with start
-
-# Initialize configuration
-config = TransformerConfig()
 
 def main():
     """This is the function which processes the text to output it in a form used by the model"""
@@ -31,6 +29,8 @@ def main():
         lines = language_file.read().split("\n")
         print("There are " + str(len(lines)) + " lines")
 
+    # Split the text file into German and English, setting it to lower case and removing punctuation
+    # We start each line of the English text with [start] and ending it with [end]
     text_pairs = []
     for i, line in enumerate(lines):
         try:
@@ -41,8 +41,7 @@ def main():
             print("failed to load line %s" % (i))
 
     # To get the tokens used in English and German texts we create
-    # two separate lists and from these create a single German
-    # text and a single English text
+    # two separate lists and from these create a single German text and a single English text
     german_list = [item[0] for item in text_pairs]
     english_list = [item[1] for item in text_pairs]
 
@@ -52,16 +51,17 @@ def main():
     class WordsNumbers:
         """Class that produces two dictionaries from input text, one of which maps words
         to numbers and the other one reverses this mapping numbers to words."""
+
         def __init__(self, text, config):
             self.text = text
-            self.config=config
+            self.config = config
             # Get the tokens
             self.tokens_list = list(set(self.text.split()))
-            
+
             # Get the most common tokens
-            # Subtract -1 as we want to use 1 of the dimensions to cover the padding tokens rather than words
+            # Subtract -1 as we want to use 1 of the dimensions/words to cover the padding tokens rather than words
             self.tokens_counter = Counter(self.text.split()).most_common(
-                self.config.vocab_size-1
+                self.config.vocab_size - 1
             )
             self.tokens_vocab = [item for item, count in self.tokens_counter]
 
@@ -76,12 +76,10 @@ def main():
             return number_dict
 
     # Get the German tokens and the English tokens
-
     english_tokens = WordsNumbers(english_text, config)
     german_tokens = WordsNumbers(german_text, config)
 
     # Creates dictionaries converting words into numbers
-
     english_numeric = english_tokens.to_numbers()
     german_numeric = german_tokens.to_numbers()
 
@@ -93,7 +91,6 @@ def main():
         pickle.dump(german_numeric, ger)
 
     # Encode the words into numbers if they are in the 15000 most common ones
-
     text_pairs_encoded = [
         [
             [
@@ -114,13 +111,11 @@ def main():
     # the encoder input in german
     # the encoder input in english, where the end token is removed elem[1][:-1]
     # english output we are trying to predict which is shifted one token to the right elem[1][1:]
-
     text_pairs_encoded_split = [
         (elem[0], elem[1][:-1], elem[1][1:]) for elem in text_pairs_encoded
     ]
 
     # Pads each bit of text to 20 tokens by adding 0s with tensor_pad and truncating at block size
-
     text_pairs_encoded_padded = [
         [
             tensor_pad(item1)[: config.block_size],
