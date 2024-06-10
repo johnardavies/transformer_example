@@ -59,7 +59,7 @@ def main():
             self.tokens_list = list(set(self.text.split()))
 
             # Get the most common tokens
-            # Subtract -1 as we want to use 1 of the dimensions/words to cover the padding tokens rather than words
+            # Subtract -1 as we want to leave 1 of the 15,0000 numbers to code the padding token rather than words. We use 0 for this.
             self.tokens_counter = Counter(self.text.split()).most_common(
                 self.config.vocab_size - 1
             )
