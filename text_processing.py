@@ -30,7 +30,7 @@ def main():
         print("There are " + str(len(lines)) + " lines")
 
     # Split the text file into German and English, setting it to lower case and removing punctuation
-    # We start each line of the English text with [start] and ending it with [end]
+    # We append a [start] at the beginning of each line of the English text and end it with [end]
     text_pairs = []
     for i, line in enumerate(lines):
         try:
