@@ -90,7 +90,7 @@ def main():
     with open("german_dictionary.pkl", "wb") as ger:
         pickle.dump(german_numeric, ger)
 
-    # Encode the words into numbers if they are in the 15000 most common ones
+    #  Convert the texts into numbers for the words that are in the 15000 most common words in either language
     text_pairs_encoded = [
         [
             [
@@ -109,7 +109,7 @@ def main():
 
     # Split the data between:
     # the encoder input in german
-    # the encoder input in english, where the end token is removed elem[1][:-1]
+    # the decoder input in english, where the end token is removed elem[1][:-1]
     # english output we are trying to predict which is shifted one token to the right elem[1][1:]
     text_pairs_encoded_split = [
         (elem[0], elem[1][:-1], elem[1][1:]) for elem in text_pairs_encoded
