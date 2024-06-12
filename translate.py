@@ -19,8 +19,8 @@ with open("english_dictionary.pkl", "rb") as file_en:
     # Load the pickled object
     english_tokens = pickle.load(file_en)
 
-# Reverse the dictionaries to go from the numbers back to the original
-# This is used previously in text processing consider removing
+# Reverse the dictionaries to go from the numbers back to the words
+# This is used previously in text processing consider refactoring
 decode_to_english = {v: k for k, v in english_tokens.items()}
 
 decode_to_german = {v: k for k, v in german_tokens.items()}
@@ -76,20 +76,20 @@ def prediction(x, y):
 
 def decode_sequence(input_sentence):
     """This function generates the translation"""
-    
+
     # Unsqueezing adds an extra dimension so that the model which was trained on batches can read single sentences
-    tokenized_input_sentence = text_pro.tensor_pad(source_vectorization(input_sentence))[
-        : config.block_size
-    ].unsqueeze(0)
+    tokenized_input_sentence = text_pro.tensor_pad(
+        source_vectorization(input_sentence)
+    )[: config.block_size].unsqueeze(0)
 
     #  initalises the decoded sentence with [start]
     decoded_sentence = "[start]"
 
     # Loop through the sentence word by word
     for i in range(0, config.block_size):
-        tokenized_target_sentence = text_pro.tensor_pad(target_vectorization(decoded_sentence))[
-            : config.block_size
-        ].unsqueeze(0)
+        tokenized_target_sentence = text_pro.tensor_pad(
+            target_vectorization(decoded_sentence)
+        )[: config.block_size].unsqueeze(0)
 
         # Generate predictions
         predictions = prediction(tokenized_input_sentence, tokenized_target_sentence)
@@ -105,11 +105,10 @@ def decode_sequence(input_sentence):
         # Appends the word to the predicted translation to date
         decoded_sentence += " " + sampled_token
 
-        # If the predicted token is end stop
+        # If the predicted token is [en]d stop
         if sampled_token == "[end]":
             break
     return decoded_sentence
-
 
 
 def trans(x, lan):
