@@ -6,34 +6,9 @@ from config import TransformerConfig
 # Initialize configuration
 config = TransformerConfig()
 
-# Embedding layer
-class Embedding(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        # Creates the text embedding and the position embedding
-        # nn.Embedding automatically does the one hot encoding so this
-        # does not need to be created directly
-        self.config = config
-        self.wte = nn.Embedding(config.vocab_size, config.dim_embedding)
-        self.wtp = nn.Embedding(config.block_size, config.dim_embedding)
 
-    def forward(self, x):
-        # Generates the word embedding from the text
-        x = self.wte(x)
-        # Generates the position embedding is applied over a tensor representing word position
-        position_ids = (
-            torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
-        )
-        position_embeddings = self.wtp(position_ids)
-        # Add the two embeddings
-        x = x + position_embeddings
-
-        return x
-
-
-# Layer normalization
 class LayerNorm(nn.Module):
-    """LayerNorm but with an optional bias. PyTorch doesn't support simply bias=False """
+    """ LayerNorm but with an optional bias. PyTorch doesn't support simply bias=False """
 
     def __init__(self, ndim, bias):
         super().__init__()
@@ -44,8 +19,32 @@ class LayerNorm(nn.Module):
         return Fun.layer_norm(input, self.weight.shape, self.weight, self.bias, 1e-5)
 
 
-# The processing layer
-class ProcessingLayer(nn.Module):
+class Embedding(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        
+        # Creates the text embedding and the position embedding
+        # nn.Embedding automatically does the one hot encoding so this
+        # does not need to be created directly
+        self.config = config
+        self.wte = nn.Embedding(config.vocab_size, config.dim_embedding)
+        self.wtp = nn.Embedding(config.block_size, config.dim_embedding)
+
+    def forward(self, x):
+        # Generates the word embedding from the text
+        x = self.wte(x)
+        # Generates the position embedding is applied over a tensor representing word position 
+        position_ids = (
+            torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
+        )
+        position_embeddings = self.wtp(position_ids)
+        # Add the two embeddings
+        x = x + position_embeddings
+
+        return x
+
+
+class Processing_layer(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.denselayer1 = nn.Linear(config.dim_embedding, config.dim_inner_layer)
@@ -54,7 +53,7 @@ class ProcessingLayer(nn.Module):
         self.layernorm2 = LayerNorm(config.dim_embedding, bias=config.bias)
 
     def forward(self, x):
-        # A layer norm and then two dense layers\n",
+        # A layer norm and then two dense layers with a skip connection and then layer norm again
         x_in = self.layernorm1(x)
         x = self.denselayer1(x_in)
         x = self.denselayer2(x) + x_in
@@ -62,7 +61,6 @@ class ProcessingLayer(nn.Module):
         return x
 
 
-# Multi-head attention layer
 class MultiHeadAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -87,7 +85,7 @@ class MultiHeadAttention(nn.Module):
             config.dim_embedding, config.dim_embedding, bias=config.bias
         )
 
-        # regularization
+        # regularisation
         self.attn_dropout = nn.Dropout(config.dropout)
         self.resid_dropout = nn.Dropout(config.dropout)
         self.dropout = config.dropout
@@ -101,14 +99,15 @@ class MultiHeadAttention(nn.Module):
             )
 
     def forward(self, x):
-        # Get the values of the batch size, sequence length and embedding dimensionality
+        # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
             C,
-        ) = x.size()
-        # calculate query, key, values
-        # by splitting the output of the attention layer into tensors of dimension dim_embedding on the 2nd dimension
+        ) = (
+            x.size()
+        )  
+        # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
         # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -136,7 +135,7 @@ class MultiHeadAttention(nn.Module):
             # manual implementation of attention
             # Calculate the inner product of the q and k vectors and normalise by square root of length of key vectors
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-
+       
             # Apply the softmax layer so that everything sums to 1
             att = F.softmax(att, dim=-1)
 
@@ -150,21 +149,20 @@ class MultiHeadAttention(nn.Module):
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side
-
+      
         # output projection and droput
         y = self.resid_dropout(self.c_proj(y))
-
+       
         return y
 
 
-# Masked Multi-Head Attention layer
 class MaskedMultiHeadAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-
+        
         # Checks that the dimension of the embedding vector can be divided by the number of heads
         assert config.dim_embedding % config.n_head == 0
-
+        
         # set embedding and head size
         self.n_head = config.n_head
         self.dim_embedding = config.dim_embedding
@@ -198,15 +196,16 @@ class MaskedMultiHeadAttention(nn.Module):
             )
 
     def forward(self, x):
-        # Get the values of the batch size, block size and embedding dimensionality
+        # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
             C,
-        ) = x.size()
+        ) = (
+            x.size()
+        )  
 
-        # calculate query, key and value vectors
-        # by splitting the output of the attention layer into tensors of dimension dim_embedding on the 2nd dimension
+        # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
 
         # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
@@ -230,24 +229,24 @@ class MaskedMultiHeadAttention(nn.Module):
                 dropout_p=self.dropout if self.training else 0,
                 is_causal=True,
             )
-
+       
         else:
             # manual implementation of attention
             # Calculate the inner product of the q and k vectors and normalise by square root of length of key vectors
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
 
             # Calculate the masked attention
-            att = att.masked_fill(self.bias[:, :, :T, :T] == 0, float("-inf"))
+            att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
 
             # Apply the softmax layer so that everything sums to 1
             att = F.softmax(att, dim=-1)
-
+            
             # Apply dropout
             att = self.attn_dropout(att)
 
             # Multiply the attention results by the value vectors
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
-
+            
         # Change the shape of the tensor back to B, T, C removing the heads
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
@@ -259,7 +258,6 @@ class MaskedMultiHeadAttention(nn.Module):
         return y
 
 
-# Encoder Decoder layer
 class EncoderDecoderAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -269,7 +267,7 @@ class EncoderDecoderAttention(nn.Module):
         # set embedding and head sizes
         self.n_head = config.n_head
         self.dim_embedding = config.dim_embedding
-
+ 
         self.c_attn_en = nn.Linear(
             config.dim_embedding, 3 * config.dim_embedding, bias=config.bias
         )
@@ -294,15 +292,17 @@ class EncoderDecoderAttention(nn.Module):
             print(
                 "WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0"
             )
-
+     
     def forward(self, x, e):
 
-        # Get the values of the batch size, block size and embedding dimensionality
+        # Get the values of the batch size, block size and embedding dimensionality 
         (
             B,
             T,
             C,
-        ) = e.size()
+        ) = (
+            e.size()
+        )  
 
         # calculate the key and value vectors from the output of the encoder
         _, k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
@@ -310,7 +310,7 @@ class EncoderDecoderAttention(nn.Module):
             1, 2
         )  # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
-
+       
         # calculate the query vectors from the output of the previous decoder layers
         q, _, _ = self.c_attn(x).split(self.dim_embedding, dim=2)
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(
@@ -331,7 +331,6 @@ class EncoderDecoderAttention(nn.Module):
         else:
             # manual implementation of attention
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = att.masked_fill(attn_mask == 0, float("-inf"))
             att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
@@ -344,23 +343,21 @@ class EncoderDecoderAttention(nn.Module):
 
         return y
 
-
-# The encoder class
-
+# The Encoder class
 
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
-        # Create embeddings for the encoder
+        # Create embeddings for both the encoder and the decoder
         self.encoder_embed = Embedding(config)
 
         # Create an attention mechanism for the encoder
         self.attention_encoder = MultiHeadAttention(config)
 
         # Set up a processing layer
-        self.encoder_processing_layer = ProcessingLayer(config)
+        self.encoder_processing_layer = Processing_layer(config)
 
     def forward(self, x):
         # Encode the language we want to translate from
@@ -374,16 +371,14 @@ class Encoder(nn.Module):
 
         return x
 
-
-# The decoder class
-
+# The Decoder class
 
 class Decoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
-        # Create an embedding layer for the decoder
+        # Create embeddings for both the encoder and the decoder
         self.decoder_embed = Embedding(config)
 
         # Create an attention mechanism for the decoder
@@ -395,10 +390,10 @@ class Decoder(nn.Module):
         # Create the encoder decoder attention
         self.decoder_attn = EncoderDecoderAttention(config)
 
-        # Set up a processing layer for the decoder
-        self.decoder_processing_layer = ProcessingLayer(config)
+        # Set up a processing sections one for the encoder and the other for the decoder
+        self.decoder_processing_layer = Processing_layer(config)
 
-        # The final layer which maps the model's embedding dimension back to the vocab size
+        # The final layer which maps the model's embedding dimension batch to the vocab size
         self.final_layer = nn.Linear(config.dim_embedding, config.vocab_size)
 
     def forward(self, x, y):
@@ -408,24 +403,21 @@ class Decoder(nn.Module):
 
         # Apply the attention mechanism and add the input
         y = self.attention_decoder(y) + y
-
-        #  # Apply layer normalisation
+        
+        # Apply layer normalisation
         y = self.layernorm(y)
 
-        # Take the output from the encoder and last layer of decoder and calculate attention again then add the input
+        # Take the ouput from the encoder x and the previous layer of decoder y and calculate attention again then add the input
         y = self.decoder_attn(y, x) + y
 
         # apply layer norm, two dense layers and a layer norm again
         y = self.decoder_processing_layer(y)
 
-        # Map the embedding dimension back to the vocabularly size
         y = self.final_layer(y)
 
         return y
 
-
-# The Transformers class
-
+# The Transformer class
 
 class Transformer(nn.Module):
     def __init__(self, config):
@@ -434,7 +426,7 @@ class Transformer(nn.Module):
         assert config.block_size is not None
         self.config = config
 
-        # Create both the encoder and the decoder layers
+        # Create embeddings for both the encoder and the decoder
         self.encoder = Encoder(config)
         self.decoder = Decoder(config)
 
@@ -442,7 +434,9 @@ class Transformer(nn.Module):
         # Encode the language we want to translate from
         encoder_out = self.encoder(x)
 
-        # Take the output from the encoder and translated text and pass to the decoder
+        # Apply the attention mechanism and add the input
         y = self.decoder(encoder_out, y)
 
         return y
+
+
