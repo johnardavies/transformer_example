@@ -5,18 +5,19 @@ import torch.nn.functional as Fun
 from torch import nn
 import torch.optim as optim
 
-
 import sys
 
-
-# Import the model config and the Transformer class
-import config
 from Transformer import *
+from config import TransformerConfig
 
-writer = SummaryWriter()
+# Initialize configuration
+config = TransformerConfig()
 
+# Initialize model
 model = Transformer(config)
 
+# Set up Tensorboard writer
+writer = SummaryWriter()
 
 # Import the training and test datasets and convert them into data loaders
 train_dataset = torch.load("train_dataset.pt")
@@ -25,8 +26,10 @@ test_dataset = torch.load("test_dataset.pt")
 train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=True)
 
+# Allow gradients to be computed
 torch.set_grad_enabled(True)
 
+# Use the Adam optimizer
 optimizer = optim.Adam(model.parameters())
 
 
