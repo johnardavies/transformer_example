@@ -1,10 +1,8 @@
 import torch
 import torch.nn.functional as Fun
 from torch import nn
-
-import math
-
 from config import TransformerConfig
+import math
 
 # Initialize configuration
 config = TransformerConfig()
@@ -140,7 +138,7 @@ class MultiHeadAttention(nn.Module):
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
        
             # Apply the softmax layer so that everything sums to 1
-            att = Fun.softmax(att, dim=-1)
+            att = F.softmax(att, dim=-1)
 
             # Apply dropout
             att = self.attn_dropout(att)
@@ -242,7 +240,7 @@ class MaskedMultiHeadAttention(nn.Module):
             att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
 
             # Apply the softmax layer so that everything sums to 1
-            att = Fun.softmax(att, dim=-1)
+            att = F.softmax(att, dim=-1)
             
             # Apply dropout
             att = self.attn_dropout(att)
@@ -334,7 +332,7 @@ class EncoderDecoderAttention(nn.Module):
         else:
             # manual implementation of attention
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = Fun.softmax(att, dim=-1)
+            att = F.softmax(att, dim=-1)
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = (
@@ -353,18 +351,13 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
 
-        # Create embeddings for both the encoder and the decoder
-        self.encoder_embed = Embedding(config)
-
-        # Create an attention mechanism for the encoder
+        # Create an attention mechanism layer for the encoder
         self.attention_encoder = MultiHeadAttention(config)
 
         # Set up a processing layer
-        self.encoder_processing_layer = Processing_layer(config)
+        self.encoder_processing_layer = ProcessingLayer(config)
 
     def forward(self, x):
-        # Encode the language we want to translate from
-        x = self.encoder_embed(x)
 
         # Apply the attention mechanism and add the input
         x = self.attention_encoder(x) + x
@@ -381,46 +374,36 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
 
-        # Create embeddings for both the encoder and the decoder
-        self.decoder_embed = Embedding(config)
-
-        # Create an attention mechanism for the decoder
+        # Create an attention mechanism layer for the decoder
         self.attention_decoder = MaskedMultiHeadAttention(config)
 
         # Create a layernorm layer
         self.layernorm = LayerNorm(config.dim_embedding, bias=config.bias)
 
-        # Create the encoder decoder attention
+        # Create the encoder decoder attention layer
         self.decoder_attn = EncoderDecoderAttention(config)
 
-        # Set up a processing sections one for the encoder and the other for the decoder
-        self.decoder_processing_layer = Processing_layer(config)
+        # Set up a processing layer for the decoder
+        self.decoder_processing_layer = ProcessingLayer(config)
 
-        # The final layer which maps the model's embedding dimension batch to the vocab size
-        self.final_layer = nn.Linear(config.dim_embedding, config.vocab_size)
 
     def forward(self, x, y):
-
-        # Encode the language we want to translate into
-        y = self.decoder_embed(y)
 
         # Apply the attention mechanism and add the input
         y = self.attention_decoder(y) + y
         
-        # Apply layer normalisation
+        #  # Apply layer normalisation
         y = self.layernorm(y)
 
-        # Take the ouput from the encoder x and the previous layer of decoder y and calculate attention again then add the input
+        # Take the output from the encoder and last layer of decoder and calculate attention again then add the input
         y = self.decoder_attn(y, x) + y
 
         # apply layer norm, two dense layers and a layer norm again
         y = self.decoder_processing_layer(y)
 
-        y = self.final_layer(y)
-
         return y
 
-# The Transformer class
+# The Transformers class
 
 class Transformer(nn.Module):
     def __init__(self, config):
@@ -429,17 +412,35 @@ class Transformer(nn.Module):
         assert config.block_size is not None
         self.config = config
 
-        # Create embeddings for both the encoder and the decoder
+        # Create an embedding layer for the encoder 
+        self.encoder_embed = Embedding(config)
+
+        # Create an embedding layer for the decoder 
+        self.decoder_embed = Embedding(config)
+
+        # Create both the encoder and the decoder layers
         self.encoder = Encoder(config)
         self.decoder = Decoder(config)
 
+        # Create the final layer which maps the model's embedding dimension back to the vocab size
+        self.final_layer = nn.Linear(config.dim_embedding, config.vocab_size)
+
     def forward(self, x, y):
-        # Encode the language we want to translate from
+
+        # Embed the text in the language we want to translate from
+        x = self.encoder_embed(x)
+
+        # Embed the text in the language we want to translate into
+        y = self.decoder_embed(y)
+
+        # Pass the language we want to translate from into the encoder
         encoder_out = self.encoder(x)
 
-        # Apply the attention mechanism and add the input
+        # Take the output from the encoder and translated text and pass to the decoder
         y = self.decoder(encoder_out, y)
 
-        return y
+        # Map the embedding dimension back to the vocabulary size
+        y = self.final_layer(y)
 
+        return y
 
