@@ -45,7 +45,7 @@ class Embedding(nn.Module):
         return x
 
 
-class Processing_layer(nn.Module):
+class ProcessingLayer(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.denselayer1 = nn.Linear(config.dim_embedding, config.dim_inner_layer)
@@ -138,7 +138,7 @@ class MultiHeadAttention(nn.Module):
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
        
             # Apply the softmax layer so that everything sums to 1
-            att = F.softmax(att, dim=-1)
+            att = Fun.softmax(att, dim=-1)
 
             # Apply dropout
             att = self.attn_dropout(att)
@@ -240,7 +240,7 @@ class MaskedMultiHeadAttention(nn.Module):
             att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
 
             # Apply the softmax layer so that everything sums to 1
-            att = F.softmax(att, dim=-1)
+            att = Fun.softmax(att, dim=-1)
             
             # Apply dropout
             att = self.attn_dropout(att)
@@ -332,7 +332,7 @@ class EncoderDecoderAttention(nn.Module):
         else:
             # manual implementation of attention
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = F.softmax(att, dim=-1)
+            att = Fun.softmax(att, dim=-1)
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         y = (
