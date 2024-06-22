@@ -1,3 +1,4 @@
+import torch
 import torch.nn.functional as Fun
 from torch import nn
 import torch.optim as optim
@@ -5,9 +6,14 @@ from torch.utils.data import DataLoader
 import pickle
 import text_processing as text_pro
 
-from Transformer import *
+import Transformer as Tr
+from config import TransformerConfig
+
 import sys
 
+
+# Initialize configuration
+config = TransformerConfig()
 
 # Load the english and german dictionaries
 with open("german_dictionary.pkl", "rb") as file_ger:
@@ -51,7 +57,7 @@ test_dataset = torch.load("test_dataset.pt")
 test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 # Set up the transformer and load the past state
-model_predict = Transformer(config)
+model_predict = Tr.Transformer(config)
 
 # Take the model that the script is going to use to translate from as the first argument in the command line
 model = sys.argv[1]

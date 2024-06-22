@@ -412,10 +412,10 @@ class Transformer(nn.Module):
         assert config.block_size is not None
         self.config = config
 
-        # Create an embedding layer for the encoder 
+        # Create an embedding layer that embeds the text we want to translate from before it passes to the encoder
         self.encoder_embed = Embedding(config)
 
-        # Create an embedding layer for the decoder 
+          # Create an embedding layer that embeds the text we want to translate into before it passes to the decoder
         self.decoder_embed = Embedding(config)
 
         # Create both the encoder and the decoder layers

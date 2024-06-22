@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import random_split
 from torch.utils.tensorboard import SummaryWriter
@@ -7,14 +8,14 @@ import torch.optim as optim
 
 import sys
 
-from Transformer import *
+import Transformer as Tr
 from config import TransformerConfig
 
 # Initialize configuration
 config = TransformerConfig()
 
 # Initialize model
-model = Transformer(config)
+model = Tr.Transformer(config)
 
 # Set up Tensorboard writer
 writer = SummaryWriter()
