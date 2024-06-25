@@ -30,7 +30,7 @@ To resume training from a model saved after an earlier training run, saved in th
 ```
 (pytorch_env) $ python train.py model_epoch_22
 ```
-Training the model for 30 epochs on a Mac Air M2 with 24 GB RAM doing other things took about 7.5 days.
+Training the model for 30 epochs on a Mac Air M2 with 24 GB RAM doing other things took about 7.5 days. The file `Transformer_two_layer.py` contains a two layer version of the Transformer.py that does not use the flash attention used in the main model.
 
 ### 5.  Generate translations
 Use a trained model specified by model_name and an input sentence to generate a translation. If there is no input sentence the model will generate translations from the test dataset.
