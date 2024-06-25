@@ -254,13 +254,7 @@ class EncoderDecoderAttention(nn.Module):
         self.resid_dropout = nn.Dropout(config.dropout)
         self.dropout = config.dropout
 
-        # Uses a faster implementation of attention if scaled_dot_product_attention available in module torch.nn.functional
-        # (which it is from PyTorch >= 2.0)
-        self.flash = hasattr(torch.nn.functional, "scaled_dot_product_attention")
-        if not self.flash:
-            print(
-                "WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0"
-            )
+   
      
     def forward(self, x, e):
 
