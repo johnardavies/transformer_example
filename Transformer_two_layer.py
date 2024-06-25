@@ -235,14 +235,14 @@ class EncoderDecoderAttention(nn.Module):
         self.n_head = config.n_head
         self.dim_embedding = config.dim_embedding
         
-       # Sets up two separate layers that increases the dimensionality of the embedding 3x to calculate the query, key and value vectors
-       # The scaling up by three is redundant for the query vector consider removing
+       # Sets up two separate layers, one to calculate the key and value vectors. The other to calculate the query vector
+       # The scaling up by two to produce the key and value vectors 
         self.c_attn_en = nn.Linear(
-            config.dim_embedding, 3 * config.dim_embedding, bias=config.bias
+            config.dim_embedding, 2*config.dim_embedding, bias=config.bias
         )
 
         self.c_attn = nn.Linear(
-            config.dim_embedding, 3 * config.dim_embedding, bias=config.bias
+            config.dim_embedding, config.dim_embedding, bias=config.bias
         )
         # output projection
         self.c_proj = nn.Linear(
@@ -274,19 +274,20 @@ class EncoderDecoderAttention(nn.Module):
         )  
 
         # calculate the key and value vectors from the output of the encoder
-        _, k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
+        k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
+       
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
        
         # calculate the query vectors from the output of the previous decoder layers
-        q, _, _ = self.c_attn(x).split(self.dim_embedding, dim=2)
+        q = self.c_attn(x)
+      
         q = q.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
-
-       
+        
         # manual implementation of attention
         att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
         att = Fun.softmax(att, dim=-1)
