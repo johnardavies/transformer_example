@@ -34,7 +34,7 @@ class Embedding(nn.Module):
     def forward(self, x):
         # Generates the word embedding from the text
         x = self.wte(x)
-        # Generates the position embedding is applied over a tensor representing word position
+        # Generates the position embedding by passing the position ids representing word position to the position embedding layer 
         position_ids = (
             torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
         )
