@@ -34,7 +34,7 @@ class Embedding(nn.Module):
     def forward(self, x):
         # Generates the word embedding from the text
         x = self.wte(x)
-        # Generates the position embedding is applied over a tensor representing word position 
+        # Generates the position embedding by passing the position ids representing word position to the position embedding layer 
         position_ids = (
             torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
         )
@@ -103,7 +103,7 @@ class MultiHeadAttention(nn.Module):
         )  
         # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
-        # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
+        # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
@@ -127,10 +127,10 @@ class MultiHeadAttention(nn.Module):
         # Multiply the attention results by the value vectors
         y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
-        # Change the shape of the tensor back to B, T, C removing the heads
+        # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
+        )  
 
         # output projection and droput
         y = self.resid_dropout(self.c_proj(y))
@@ -184,7 +184,7 @@ class MaskedMultiHeadAttention(nn.Module):
         # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
 
-        # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
+        # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
@@ -194,9 +194,6 @@ class MaskedMultiHeadAttention(nn.Module):
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
-
-     
-       
 
         # manual implementation of attention
         # Calculate the inner product of the q and k vectors and normalise by square root of length of key vectors
@@ -214,10 +211,10 @@ class MaskedMultiHeadAttention(nn.Module):
         # Multiply the attention results by the value vectors
         y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
             
-        # Change the shape of the tensor back to B, T, C removing the heads
+        # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
+        )  
 
         # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
@@ -269,7 +266,7 @@ class EncoderDecoderAttention(nn.Module):
 
         # calculate the key and value vectors from the output of the encoder
         k, v = self.c_attn_en(e).split(self.dim_embedding, dim=2)
-       
+        # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads       
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
