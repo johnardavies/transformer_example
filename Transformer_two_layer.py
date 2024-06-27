@@ -289,14 +289,11 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
 
-        # Create embeddings for both the encoder and the decoder
-        self.encoder_embed = Embedding(config)
-
-        # Create an attention mechanism for the encoder
+        # Create an attention mechanism layer for the encoder
         self.attention_encoder = MultiHeadAttention(config)
 
         # Set up a processing layer
-        self.encoder_processing_layer = Processing_layer(config)
+        self.encoder_processing_layer = ProcessingLayer(config)
 
     def forward(self, x):
 
@@ -308,7 +305,6 @@ class Encoder(nn.Module):
 
         return x
 
-
 # The Decoder class
 
 
@@ -317,34 +313,29 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
 
-        # Create embeddings for both the encoder and the decoder
-        self.decoder_embed = Embedding(config)
-
-        # Create an attention mechanism for the decoder
-        self.attention_decoder = MaskedMultiHeadAttention(config)
+        # Create a masked attention mechanism for the decoder
+        self.masked_attention = MaskedMultiHeadAttention(config)
 
         # Create a layernorm layer
         self.layernorm = LayerNorm(config.dim_embedding, bias=config.bias)
 
-        # Create the encoder decoder attention
-        self.decoder_attn = EncoderDecoderAttention(config)
+        # Create the encoder decoder attention layer
+        self.encoder_decoder_attn = EncoderDecoderAttention(config)
 
-        # Set up a processing sections one for the encoder and the other for the decoder
-        self.decoder_processing_layer = Processing_layer(config)
+        # Set up a processing layer for the decoder
+        self.decoder_processing_layer = ProcessingLayer(config)
 
-        # The final layer which maps the model's embedding dimension batch to the vocab size
-        self.final_layer = nn.Linear(config.dim_embedding, config.vocab_size)
 
     def forward(self, x, y):
 
         # Apply the attention mechanism and add the input
-        y = self.attention_decoder(y) + y
-
-        # Apply layer normalisation
+        y = self.masked_attention(y) + y
+        
+        #  # Apply layer normalisation
         y = self.layernorm(y)
 
-        # Take the ouput from the encoder x and the previous layer of decoder y and calculate attention again then add the input
-        y = self.decoder_attn(y, x) + y
+        # Take the output from the encoder and last layer of decoder and calculate attention again then add the input
+        y = self.encoder_decoder_attn(y, x) + y
 
         # apply layer norm, two dense layers and a layer norm again
         y = self.decoder_processing_layer(y)
