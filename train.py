@@ -67,12 +67,7 @@ for epoch in range(epoch_start + 1, config.epochs + 1):
         # Generates a predicted translation
         yhat = model(german, english)
 
-        # yhat has dimensions (batch_size, block_size, vocab_size)
-        # yhat.view(-1, yhat.size(-1)) has the dimensions ((batch_size X block_size), vocab_size)
-        # output has the dimensions (batch_size, block_size)
-        # output.view(-1) has the dimensions of (batch_size x block_size)
-
-        # Calculates the cross entropy
+        # Calculates the cross entropy between the prediction and the target, ignoring the 0s
         loss = Fun.cross_entropy(
             yhat.view(-1, yhat.size(-1)), output.view(-1), ignore_index=0
         )
