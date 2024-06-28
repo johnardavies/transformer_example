@@ -12,6 +12,7 @@ config = TransformerConfig()
 
 # The Encoder class
 
+
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -33,7 +34,9 @@ class Encoder(nn.Module):
 
         return x
 
+
 # The Decoder class
+
 
 class Decoder(nn.Module):
     def __init__(self, config):
@@ -52,12 +55,11 @@ class Decoder(nn.Module):
         # Set up a processing layer for the decoder
         self.decoder_processing_layer = nc.ProcessingLayer(config)
 
-
     def forward(self, x, y):
 
         # Apply the masked attention mechanism and add the input
         y = self.masked_attention(y) + y
-        
+
         #  # Apply layer normalisation
         y = self.layernorm(y)
 
@@ -69,7 +71,9 @@ class Decoder(nn.Module):
 
         return y
 
+
 # The Transformers class
+
 
 class Transformer(nn.Module):
     def __init__(self, config):
@@ -109,4 +113,3 @@ class Transformer(nn.Module):
         y = self.final_layer(y)
 
         return y
-
