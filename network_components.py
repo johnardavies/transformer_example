@@ -30,7 +30,7 @@ class Embedding(nn.Module):
     def forward(self, x):
         # Generates the word embedding from the text
         x = self.wte(x)
-        # Generates the position embedding is applied over a tensor representing word position
+        # Generates the position embedding by passing the position ids representing word position to the position embedding layer 
         position_ids = (
             torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
         )
@@ -102,9 +102,10 @@ class MultiHeadAttention(nn.Module):
             T,
             C,
         ) = x.size()
+        
         # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
-        # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
+        # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
@@ -201,7 +202,7 @@ class MaskedMultiHeadAttention(nn.Module):
         # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
 
-        # split k down by batch_size, sequence_length, number_heads, dimension_embedding/number_heads
+        # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads
         k = k.view(B, T, self.n_head, C // self.n_head).transpose(
             1, 2
         )  # (B, nh, T, hs)
