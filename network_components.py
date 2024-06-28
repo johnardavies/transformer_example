@@ -30,7 +30,7 @@ class Embedding(nn.Module):
     def forward(self, x):
         # Generates the word embedding from the text
         x = self.wte(x)
-        # Generates the position embedding by passing the position ids representing word position to the position embedding layer 
+        # Generates the position embedding by passing the position ids representing word position to the position embedding layer
         position_ids = (
             torch.arange(self.config.block_size).unsqueeze(0).repeat(x.size(0), 1)
         )
@@ -102,7 +102,7 @@ class MultiHeadAttention(nn.Module):
             T,
             C,
         ) = x.size()
-        
+
         # calculate query, key, values vectors from the input embedding vectors
         q, k, v = self.c_attn(x).split(self.dim_embedding, dim=2)
         # split k, q and v down to batch_size, number_heads, block size, dimension_embedding/number_heads
@@ -142,9 +142,7 @@ class MultiHeadAttention(nn.Module):
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
         # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
-        y = (
-            y.transpose(1, 2).contiguous().view(B, T, C)
-        )  
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
 
         # output projection and droput
         y = self.resid_dropout(self.c_proj(y))
@@ -242,9 +240,7 @@ class MaskedMultiHeadAttention(nn.Module):
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
         # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
-        y = (
-            y.transpose(1, 2).contiguous().view(B, T, C)
-        ) 
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
 
         # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
@@ -330,9 +326,7 @@ class EncoderDecoderAttention(nn.Module):
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
         # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
-        y = (
-            y.transpose(1, 2).contiguous().view(B, T, C)
-        )  
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
 
         # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
