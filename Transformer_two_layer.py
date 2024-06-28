@@ -34,13 +34,12 @@ class Encoder(nn.Module):
 
 # The Decoder class
 
-
 class Decoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
 
-        # Create a masked attention mechanism for the decoder
+        # Create an attention mechanism layer for the decoder
         self.masked_attention = nc.MaskedMultiHeadAttention(config)
 
         # Create a layernorm layer
@@ -55,7 +54,7 @@ class Decoder(nn.Module):
 
     def forward(self, x, y):
 
-        # Apply the attention mechanism and add the input
+        # Apply the masked attention mechanism and add the input
         y = self.masked_attention(y) + y
         
         #  # Apply layer normalisation
