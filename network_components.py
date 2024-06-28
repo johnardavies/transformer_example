@@ -140,10 +140,10 @@ class MultiHeadAttention(nn.Module):
             # Multiply the attention results by the value vectors
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
-        # Change the shape of the tensor back to B, T, C removing the heads
+        # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
+        )  
 
         # output projection and droput
         y = self.resid_dropout(self.c_proj(y))
@@ -240,10 +240,10 @@ class MaskedMultiHeadAttention(nn.Module):
             # Multiply the attention results by the value vectors
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
-        # Change the shape of the tensor back to B, T, C removing the heads
+        # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
+        ) 
 
         # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
@@ -328,9 +328,10 @@ class EncoderDecoderAttention(nn.Module):
             att = Fun.softmax(att, dim=-1)
             att = self.attn_dropout(att)
             y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        # Change the shape of the tensor back to B, T, C re-assembling the head outputs side by side
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
-        )  # re-assemble all head outputs side by side
+        )  
 
         # output projection and dropout
         y = self.resid_dropout(self.c_proj(y))
