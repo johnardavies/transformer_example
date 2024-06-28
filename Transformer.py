@@ -41,13 +41,13 @@ class Decoder(nn.Module):
         self.config = config
 
         # Create an attention mechanism layer for the decoder
-        self.attention_decoder = nc.MaskedMultiHeadAttention(config)
+        self.masked_attention = nc.MaskedMultiHeadAttention(config)
 
         # Create a layernorm layer
         self.layernorm = nc.LayerNorm(config.dim_embedding, bias=config.bias)
 
         # Create the encoder decoder attention layer
-        self.decoder_attn = nc.EncoderDecoderAttention(config)
+        self.encoder_decoder_attn = nc.EncoderDecoderAttention(config)
 
         # Set up a processing layer for the decoder
         self.decoder_processing_layer = nc.ProcessingLayer(config)
@@ -55,14 +55,14 @@ class Decoder(nn.Module):
 
     def forward(self, x, y):
 
-        # Apply the attention mechanism and add the input
-        y = self.attention_decoder(y) + y
+        # Apply the masked attention mechanism and add the input
+        y = self.masked_attention(y) + y
         
         #  # Apply layer normalisation
         y = self.layernorm(y)
 
         # Take the output from the encoder and last layer of decoder and calculate attention again then add the input
-        y = self.decoder_attn(y, x) + y
+        y = self.encoder_decoder_attn(y, x) + y
 
         # apply layer norm, two dense layers and a layer norm again
         y = self.decoder_processing_layer(y)
