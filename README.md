@@ -2,7 +2,7 @@
 
 This is repo which implements a simple Transformer. It takes the attention mechanism and other network components that Andrej Karpathy developed in [nanoGPT](https://github.com/karpathy/nanoGPT) for language generation and reuses them to implement a Transformer for language translation. It uses the PyTorch framework. The language translation Transformer’s structure follows the example in François Chollet’s book [‘Deep Learning with Python’](https://github.com/fchollet/deep-learning-with-python-notebooks)
 
-The code is talked through in more detail in this post [here](https://johnardavies.github.io/technical/transformer3/). The model is specified in the ```config.py``` and translates from german to english (lower case).
+The code is talked through in more detail in this post [here](https://johnardavies.github.io/technical/transformer3/). The model is specified in the ```config.py``` and translates from german to english (in lower case).
 
 ### To run the example:
 
@@ -14,7 +14,7 @@ $ wget https://www.manythings.org/anki/deu-eng.zip && unzip deu-eng.zip
 ### 2.  Install the project dependencies
 Create and activate virtual environment, here called pytorch_env and install the requirements:
 ```
-$ python3 -m  venv pytorch_env && source pytorch_env/bin/activate &&  pip install -r requirements.txt
+$ python -m  venv pytorch_env && source pytorch_env/bin/activate &&  pip install -r requirements.txt
 ```
 ### 3.  Process the text data
 Generate a test and training dataset of the downloaded data:
