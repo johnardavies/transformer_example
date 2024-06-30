@@ -12,7 +12,6 @@ from config import TransformerConfig
 config = TransformerConfig()
 
 
-
 # The Transformers class
 
 
