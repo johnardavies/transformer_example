@@ -5,11 +5,6 @@ import math
 
 import encoder_decoder as ed
 import network_components as nc
-from config import TransformerConfig
-
-
-# Initialize configuration
-config = TransformerConfig()
 
 
 # The Transformers class
