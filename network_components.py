@@ -3,10 +3,6 @@ import torch.nn.functional as Fun
 from torch import nn
 import math
 
-from config import TransformerConfig
-
-# Initialize configuration
-#config = TransformerConfig()
 
 
 class LayerNorm(nn.Module):
