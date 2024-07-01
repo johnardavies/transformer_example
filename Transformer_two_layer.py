@@ -3,12 +3,10 @@ import torch.nn.functional as Fun
 from torch import nn
 import math
 
-from config import TransformerConfig
 import network_components as nc
 import encoder_decoder as ed
 
-# Initialize configuration
-config = TransformerConfig()
+
 
 # The Transformer class
 
