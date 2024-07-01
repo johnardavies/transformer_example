@@ -6,7 +6,7 @@ import math
 from config import TransformerConfig
 
 # Initialize configuration
-config = TransformerConfig()
+#config = TransformerConfig()
 
 
 class LayerNorm(nn.Module):
