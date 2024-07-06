@@ -111,7 +111,7 @@ def decode_sequence(input_sentence):
         # Appends the word to the predicted translation to date
         decoded_sentence += " " + sampled_token
 
-        # If the predicted token is [en]d stop
+        # If the predicted token is [end] stop
         if sampled_token == "[end]":
             break
     return decoded_sentence
