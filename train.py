@@ -61,7 +61,7 @@ for epoch in range(epoch_start + 1, config.epochs + 1):
     model.train()
     for i, (german, english, output) in enumerate(train_dataloader):
 
-        # clear any existing gradients to compute a new pone
+        # clear any existing gradients to compute a new one
         optimizer.zero_grad()
 
         # Generates a predicted translation
