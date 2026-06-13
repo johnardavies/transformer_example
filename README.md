@@ -1,6 +1,6 @@
 # Transformer_example
 
-This is repo which implements a simple Transformer. It takes the attention mechanism and other network components that Andrej Karpathy developed in [nanoGPT](https://github.com/karpathy/nanoGPT) for language generation and reuses them to implement a Transformer for language translation. It uses the PyTorch framework. The language translation Transformer’s structure follows the example in François Chollet’s book [‘Deep Learning with Python’](https://github.com/fchollet/deep-learning-with-python-notebooks)
+This is a repo which implements a simple Transformer. It takes the attention mechanism and other network components that Andrej Karpathy developed in [nanoGPT](https://github.com/karpathy/nanoGPT) for language generation and reuses them to implement a Transformer for language translation. It uses the PyTorch framework. The language translation Transformer’s structure follows the example in François Chollet’s book [‘Deep Learning with Python’](https://github.com/fchollet/deep-learning-with-python-notebooks)
 
 The code is talked through in more detail in this post [here](https://johnardavies.github.io/technical/transformer3/). The model is specified in the ```config.py``` and translates from german to english (in lower case).
 
